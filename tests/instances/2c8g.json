@@ -1,0 +1,12 @@
+{
+	"image": "anolisos*_7_9_*anck_*",
+	"disk": {
+		"category": "cloud_essd"
+	},
+	"ecs": {
+		"region_id": "cn-beijing",
+		"instance_type": "ecs.g7.large",
+		"instance_name": "plugsched-test",
+		"internet_max_bandwidth_out": 8
+	}
+}

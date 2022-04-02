@@ -1,0 +1,18 @@
+name: Run CI
+
+on: [push]
+
+jobs:
+  quick-start:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - name: Setup python3
+      run: sudo apt-get update && sudo apt-get install -y python3 python3-pip rsync sshpass
+    - name: Setup dependencies
+      run: pip install --default-timeout=3600 sh coloredlogs docopt alibabacloud_ecs20140526
+    - name: Run Quick Start test
+      env:
+        ALICLOUD_SECRET_KEY: ${{ secrets.ALICLOUD_SECRET_KEY }}
+        ALICLOUD_ACCESS_KEY: ${{ secrets.ALICLOUD_ACCESS_KEY }}
+      run: python3 tests/framework/test.py --ecs tests/instances/2c8g.json --test tests/test_quick_start.sh

@@ -13,7 +13,7 @@ yum install anolis-repos -y
 yum install podman kernel-debuginfo-${uname_r} kernel-devel-${uname_r} --enablerepo=Plus-debuginfo --enablerepo=Plus -y
 
 cd /tmp/plugsched
-podman build -t plugsched/plugsched-sdk .
+podman build -t plugsched/plugsched-sdk . -f Dockerfile.${arch}
 mkdir -p /tmp/work
 cd /tmp/work
 curl https://mirrors.openanolis.cn/anolis/7.9/Plus/source/Packages/kernel-${uname_noarch}.src.rpm -o kernel-${uname_noarch}.src.rpm
@@ -42,8 +42,8 @@ EOF
 podman cp patch plugsched:/root/
 podman exec -it plugsched patch -f -p1 -i patch
 podman exec -it plugsched plugsched-cli build scheduler
-podman exec -it plugsched ls /usr/local/lib/plugsched/rpmbuild/RPMS/x86_64/
-podman exec -it plugsched cp /usr/local/lib/plugsched/rpmbuild/RPMS/x86_64/scheduler-xxx-${uname_noarch}.yyy.x86_64.rpm /root
+podman exec -it plugsched ls /usr/local/lib/plugsched/rpmbuild/RPMS/${arch}/
+podman exec -it plugsched cp /usr/local/lib/plugsched/rpmbuild/RPMS/${arch}/scheduler-xxx-${uname_noarch}.yyy.${arch}.rpm /root
 rpm -ivh /tmp/work/scheduler-xxx-${uname_noarch}.yyy.*.rpm
 if ! dmesg | grep "I am the new scheduler: __schedule"; then
 	2>&1 echo "Failed to install the scheduler module"

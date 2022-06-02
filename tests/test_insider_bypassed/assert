@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+# Copyright 2019-2022 Alibaba Group Holding Limited.
+# SPDX-License-Identifier: GPL-2.0 OR BSD-3-Clause
+
+# Run some coverage tests
+echo "Insider bypassed test"
+test_sched_syscall/assert || exit 1
+test_domain_rebuild/assert || exit 2
+test_cpu_throttle/assert || exit 3
+test_var_uniformity/assert || exit 4

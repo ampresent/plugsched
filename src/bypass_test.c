@@ -1,5 +1,6 @@
 #include <linux/kconfig.h>
 #include <linux/stop_machine.h>
+#include <linux/kallsyms.h>
 #include "helper.h"
 #include "tainted.h"
 

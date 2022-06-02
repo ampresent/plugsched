@@ -206,7 +206,7 @@ if __name__ == '__main__':
     func_class['sched_outsider'] = (func_class['mod_fns'] - func_class['insider'] - func_class['border']) | func_class['fn_ptr_optimized']
     func_class['optimized_out'] = func_class['sched_outsider'] - func_class['in_vmlinux']
     func_class['public_user'] = func_class['fn'] - func_class['insider'] - func_class['border']
-    func_class['tainted'] = (func_class['border'] | func_class['insider']) & func_class['in_vmlinux']
+    func_class['tainted'] = (func_class['border'] | func_class['insider']) & func_class['in_vmlinux'] - func_class['init']
     func_class['undefined'] = func_class['sched_outsider'] | func_class['border']
 
     for output_item in ['sched_outsider', 'fn_ptr', 'interface', 'init', 'insider', 'optimized_out', 'export']:

@@ -13,9 +13,9 @@ jobs:
       - name: Read version
         run: |
           export VERSION=$(cat ./module-contrib/version | awk '{print $NF}')
-          echo "::set-env name=VERSION::$VERSION"
+          echo "VERSION=v$VERSION" >> $GITHUB_ENV
       - name: Create tag
         uses: rickstaa/action-create-tag@v1
         with:
-          tag: "v$VERSION"
+          tag: $VERSION
           message: ""

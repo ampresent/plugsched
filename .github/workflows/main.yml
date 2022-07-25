@@ -8,7 +8,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - name: Bump Versions
-        uses: remorses/bump-version@v8
+        uses: remorses/bump-version@js
         with:
             version_file: ./module-contrib/version
             prefix: "plugsched version: "

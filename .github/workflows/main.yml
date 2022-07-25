@@ -14,8 +14,8 @@ jobs:
         run: |
           export VERSION=$(cat ./module-contrib/version | awk '{print $NF}')
           echo "::set-env name=VERSION::$VERSION"
-      - name: Push tag
-      - uses: rickstaa/action-create-tag@v1
+      - name: Create tag
+        uses: rickstaa/action-create-tag@v1
         with:
           tag: "v$VERSION"
           message: ""

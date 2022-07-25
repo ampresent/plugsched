@@ -9,5 +9,10 @@ tests=$(cat bundles/$1)
 prep_env
 for T in ${tests}; do
 	build_case test_$T
-	test_$T/assert
+	desc=$(echo $T | sed 's/\(^\|_\)\([a-z]\)/ \u\2/g')
+	if test_$T/assert; then
+		echo -e "${desc} test \033[31mPASS\033[0m"
+	else
+		echo -e "${desc} test \033[31mFAILED\033[0m"
+	fi
 done

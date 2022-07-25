@@ -1,16 +1,19 @@
-name: Bump
+name: TagWhenVersionBump
 
 on:
-  workflow_dispatch:
+  push:
+    paths:
+      - 'module-contrib/version'
+
 jobs:
-  bump:
+  tag:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - name: Bump Versions
-        uses: remorses/bump-version@js
+      - name: Read version
+        run: export VERSION=$(cat ./module-contrib/version | awk '{print $NF}')
+      - name: Push tag
+        id: v${{VERSION}}
+        uses: mathieudutour/github-tag-action@v6.0
         with:
-            version_file: ./module-contrib/version
-            prefix: "plugsched version: "
-        env:
-            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}

@@ -1,10 +1,36 @@
 // Copyright 2019-2022 Alibaba Group Holding Limited.
 // SPDX-License-Identifier: GPL-2.0 OR BSD-3-Clause
 
+#ifndef __HELPER_H
+#define __HELPER_H
+#include <linux/kconfig.h>
 
-/*
- * helper function to communicate with vmlinux
- */
+static inline void do_write_cr0(unsigned long val)
+{
+	asm volatile("mov %0,%%cr0": "+r" (val) : : "memory");
+}
+
+#ifdef CONFIG_X86_64
+#include <asm/paravirt.h>
+static inline unsigned long prepare_modify_text(void)
+{
+	unsigned long cr0;
+	cr0 = read_cr0();
+	do_write_cr0(cr0 & 0xfffeffff);
+
+	return cr0;
+}
+
+static inline void finish_modify_text(unsigned long cr0)
+{
+	do_write_cr0(cr0);
+}
+#endif
+
+#ifdef CONFIG_ARM64
+static inline unsigned long prepare_modify_text(void) { return 0; }
+static inline void finish_modify_text(unsigned long cr0) { }
+#endif
 
 static inline unsigned long get_ptr_value(unsigned long ptr_addr)
 {
@@ -98,3 +124,4 @@ static void addr_sort(unsigned long *addr, unsigned long *size, int n) {
 		}
 	}
 }
+#endif

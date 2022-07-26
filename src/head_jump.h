@@ -6,8 +6,7 @@
 #ifndef __HEAD_JUMP_H
 #define __HEAD_JUMP_H
 
-#include <linux/cpu.h>
-#include <linux/kallsyms.h>
+#include "helper.h"
 
 #define EXPORT_SIDECAR(fn, file, ...) EXPORT_PLUGSCHED(fn, __VA_ARGS__)
 #define PLUGSCHED_FN_PTR EXPORT_PLUGSCHED
@@ -53,8 +52,8 @@ static unsigned long mod_func_size[NR_INTERFACE_FN];
  * 2) For functions set:
  *    1. Add the function to export_jump.h file
  *    2. Call jump_init_all() to init all functions data
- *    3. Use JUMP_OPERATION(install) macro to replace the functions set
- *    4. Use JUMP_OPERATION(remove) macro to restore the functions set
+ *    3. Use jump_install() to replace the functions set
+ *    4. Use jump_remove() to restore the functions set
  */
 
 #ifdef CONFIG_X86_64
@@ -82,21 +81,6 @@ static unsigned long mod_func_size[NR_INTERFACE_FN];
 #define JUMP_REMOVE_FUNC(func) 	\
 	memcpy((unsigned char *)__orig_##func, store_orig_##func, HEAD_LEN)
 
-static inline void do_write_cr0(unsigned long val)
-{
-	asm volatile("mov %0,%%cr0": "+r" (val) : : "memory");
-}
-
-/* Must be used in stop machine context */
-#define JUMP_OPERATION(ops) do { 	\
-		unsigned long cr0;      \
-					\
-		cr0 = read_cr0();       \
-		do_write_cr0(cr0 & 0xfffeffff);    \
-		jump_##ops();		\
-		do_write_cr0(cr0);         \
-	} while(0)
-
 #else /* For ARM64 */
 #define DEFINE_JUMP_FUNC(func)				\
 	static u32 store_orig_##func;			\
@@ -118,10 +102,6 @@ static inline void do_write_cr0(unsigned long val)
 #define JUMP_REMOVE_FUNC(func)  \
 	aarch64_insn_patch_text_nosync(__orig_##func, store_orig_##func)
 
-#define JUMP_OPERATION(ops) do {	\
-		jump_##ops();	\
-	} while(0)
-
 #endif /* CONFIG_X86_64 */
 
 #define EXPORT_PLUGSCHED(fn, ...) DEFINE_JUMP_FUNC(fn);
@@ -131,14 +111,20 @@ static inline void do_write_cr0(unsigned long val)
 #define EXPORT_PLUGSCHED(fn, ...) JUMP_INSTALL_FUNC(fn);
 static inline void jump_install(void)
 {
+	unsigned long text_flag;
+	text_flag = prepare_modify_text();
 	#include "export_jump.h"
+	finish_modify_text(text_flag);
 }
 #undef EXPORT_PLUGSCHED
 
 #define EXPORT_PLUGSCHED(fn, ...) JUMP_REMOVE_FUNC(fn);
 static inline void jump_remove(void)
 {
+	unsigned long text_flag;
+	text_flag = prepare_modify_text();
 	#include "export_jump.h"
+	finish_modify_text(text_flag);
 }
 #undef EXPORT_PLUGSCHED
 

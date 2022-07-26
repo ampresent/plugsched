@@ -39,9 +39,10 @@ $(obj)/%.o: $(src)/%.c GET_STACK_SIZE FORCE
 	$(call if_changed_rule,cc_o_c)
 	$(OBJCOPY) $(OBJCOPYFLAGS) $(OBJCOPYFLAGS_$(@F)) $@
 
-scheduler-objs := $(objs-y) main.o tainted.o sched_rebuild.o
+scheduler-objs := $(objs-y) main.o bypass_test.o tainted.o sched_rebuild.o
 
 ldflags-y += -T $(plugsched_modpath)/scheduler.lds
+ccflags-n += -DSCHEDMOD_BYPASS_TEST
 ccflags-n += -DSCHEDMOD_MEMPOOL
 ccflags-y += -Wno-unused-function
 ccflags-y += -fkeep-static-functions

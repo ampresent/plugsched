@@ -1,10 +1,19 @@
 #include "tainted.h"
 
+#ifdef SCHEDMOD_BYPASS_TEST
+#define BYPASS_TEST_INIT(func)			\
+		.plain_name = #func,		\
+		.mod_name = "plugsched:" #func,
+#else
+#define BYPASS_TEST_INIT(func)
+#endif
+
 #undef TAINTED_FUNCTION
 #define TAINTED_FUNCTION(func,sympos) 		\
 	{ 					\
 		.name = #func "," #sympos,	\
 		.kobj = NULL,			\
+		BYPASS_TEST_INIT(func)		\
 	},
 
 struct tainted_function tainted_functions[] = {

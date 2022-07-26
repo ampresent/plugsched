@@ -17,6 +17,7 @@
 #include "head_jump.h"
 #include "stack_check.h"
 #include "tainted.h"
+#include "bypass_test.h"
 
 #define MAX_CPU_NR		1024
 
@@ -385,6 +386,7 @@ static int load_sched_routine(void)
 	install_sched_debugfs();
 #endif
 
+	install_bypass_checkers();
 	main_end = ktime_get();
 	report_detail_time("load");
 	scheduler_enable = 1;
@@ -416,6 +418,7 @@ static int unload_sched_routine(void)
 #endif
 
 	sched_mempools_destroy();
+	uninstall_bypass_checkers();
 	main_end = ktime_get();
 	report_detail_time("unload");
 

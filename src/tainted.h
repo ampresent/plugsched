@@ -2,6 +2,11 @@
 
 struct tainted_function {
 	char *name;
+#ifdef SCHEDMOD_BYPASS_TEST
+	char *plain_name;
+	char *mod_name;
+	char store_header[2];
+#endif
 	struct kobject *kobj;
 };
 

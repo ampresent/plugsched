@@ -12,14 +12,16 @@
 #include <linux/sched/task.h>
 #include <linux/sysfs.h>
 #include <linux/version.h>
+#include <linux/debugfs.h>
+#include <linux/proc_fs.h>
 #include "sched.h"
 #include "mempool.h"
 #include "head_jump.h"
 #include "stack_check.h"
+#include "future.h"
 
 #define MAX_CPU_NR		1024
 
-extern void __orig___schedule(bool);
 int process_id[MAX_CPU_NR];
 atomic_t cpu_finished;
 static atomic_t global_error;
@@ -47,10 +49,7 @@ extern struct percpu_rw_semaphore cpuset_rwsem;
 	percpu_up_write(&cpuset_rwsem)
 #endif
 
-extern cpumask_var_t sd_sysctl_cpus;
 extern const struct file_operations __mod_sched_feat_fops;
-extern const struct seq_operations __mod_sched_debug_sops;
-extern const struct seq_operations __mod_schedstat_sops;
 
 static struct dentry *sched_features_dir;
 static s64 stop_time;
@@ -248,8 +247,6 @@ static int sync_sched_mod(void *func)
 }
 
 #ifdef CONFIG_SCHED_DEBUG
-extern void __orig_register_sched_domain_sysctl(void);
-extern void __orig_unregister_sched_domain_sysctl(void);
 
 static inline void install_sched_domain_sysctl(void)
 {
@@ -257,7 +254,7 @@ static inline void install_sched_domain_sysctl(void)
 	plugsched_cpuset_lock();
 
 	__orig_unregister_sched_domain_sysctl();
-	register_sched_domain_sysctl();
+	__mod_register_sched_domain_sysctl();
 
 	plugsched_cpuset_unlock();
 	mutex_unlock(&cgroup_mutex);
@@ -268,8 +265,7 @@ static inline void restore_sched_domain_sysctl(void)
 	mutex_lock(&cgroup_mutex);
 	plugsched_cpuset_lock();
 
-	unregister_sched_domain_sysctl();
-	cpumask_copy(sd_sysctl_cpus, cpu_possible_mask);
+	__mod_unregister_sched_domain_sysctl();
 	__orig_register_sched_domain_sysctl();
 
 	plugsched_cpuset_unlock();
@@ -295,7 +291,6 @@ void install_sched_debugfs(void)
 }
 
 extern struct file_operations __orig_sched_feat_fops;
-extern struct seq_operations  __orig_sched_debug_sops;
 
 void restore_sched_debugfs(void)
 {
@@ -326,7 +321,6 @@ int restore_sched_debug_procfs(void)
 #endif
 
 #ifdef CONFIG_SCHEDSTATS
-extern struct seq_operations __orig_schedstat_sops;
 
 /* schedstat interface in proc */
 int install_proc_schedstat(void)

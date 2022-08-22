@@ -5,9 +5,10 @@
 
 #include <linux/sched.h>
 #include "sched.h"
+#include "future.h"
 
-extern void __orig_set_rq_offline(struct rq*);
-extern void __orig_set_rq_online(struct rq*);
+extern void __mod_set_rq_offline(struct rq*);
+extern void __mod_set_rq_online(struct rq*);
 extern unsigned int process_id[];
 
 extern const struct sched_class __orig_stop_sched_class;
@@ -77,11 +78,11 @@ void clear_sched_state(bool mod)
 {
 	struct task_struct *g, *p;
 	struct rq *rq = this_rq();
-	int queue_flags = DEQUEUE_SAVE | DEQUEUE_MOVE | DEQUEUE_NOCLOCK;
+	int queue_flags = DEQUEUE_SAVE;
 
 	raw_spin_lock(&rq->lock);
 	if (mod) {
-		set_rq_offline(rq);
+		__mod_set_rq_offline(rq);
 	} else {
 		__orig_set_rq_offline(rq);
 	}
@@ -94,7 +95,6 @@ void clear_sched_state(bool mod)
 			continue;
 
 		/* To avoid SCHED_WARN_ON(rq->clock_update_flags < RQCF_ACT_SKIP) */
-		rq->clock_update_flags = RQCF_UPDATED;
 
 		if (task_on_rq_queued(p))
 			p->sched_class->dequeue_task(rq, p, queue_flags);
@@ -107,12 +107,12 @@ void rebuild_sched_state(bool mod)
 	struct task_struct *g, *p;
 	struct task_group *tg;
 	struct rq *rq = this_rq();
-	int queue_flags = ENQUEUE_RESTORE | ENQUEUE_MOVE | ENQUEUE_NOCLOCK;
+	int queue_flags = ENQUEUE_RESTORE;
 	int cpu = smp_processor_id();
 
 	raw_spin_lock(&rq->lock);
 	if (mod) {
-		set_rq_online(rq);
+		__mod_set_rq_online(rq);
 	} else {
 		__orig_set_rq_online(rq);
 	}
@@ -137,13 +137,14 @@ void rebuild_sched_state(bool mod)
 		if (tg == &root_task_group)
 			continue;
 
-		if (tg->cfs_bandwidth.period_active) {
+		if (hrtimer_active(&tg->cfs_bandwidth.period_timer)) {
 			hrtimer_restart(&tg->cfs_bandwidth.period_timer);
 			hrtimer_restart(&tg->cfs_bandwidth.slack_timer);
 		}
 #ifdef CONFIG_RT_GROUP_SCHED
-		if (tg->rt_bandwidth.rt_period_active)
+		if (hrtimer_active(&tg->rt_bandwidth.rt_period_timer)) {
 			hrtimer_restart(&tg->rt_bandwidth.rt_period_timer);
+                }
 #endif
 	}
 }
